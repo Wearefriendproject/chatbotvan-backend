@@ -7,7 +7,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Dán API key thật của bạn vào đây
-GROQ_API_KEY = "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"
+GROQ_API_KEY = "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"
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 @app.route("/")
@@ -49,5 +49,6 @@ def chat():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
