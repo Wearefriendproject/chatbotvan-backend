@@ -6,10 +6,9 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-# Dán API key thật của bạn vào đây
-GROQ_API_KEY = "AIzaSyA7wDPBfltxUWBO5DLjWPsDWHi37TLzW-U"
-GROQ_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent
-"
+# Dán API key của Gemini vào
+GEMINI_API_KEY = "AIzaSyA7wDPBfltxUWBO5DLjWPsDWHi37TLzW-U"
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent"
 
 @app.route("/")
 def index():
@@ -20,37 +19,44 @@ def chat():
     user_input = request.json.get("message")
 
     headers = {
-        "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json",
+        "x-goog-api-key": GEMINI_API_KEY  # ✅ Gemini dùng header này, KHÔNG dùng Bearer
     }
 
+    # ✅ Format dành cho Gemini (không có role, chỉ có "contents")
     data = {
-        "model": "llama-3.1-8b-instant",  # ✅ model có thật
-        "messages": [
-            {"role": "system", "content": "Bạn là chatbot giúp người dùng phân tích bài văn: nêu rõ ưu điểm và nhược điểm cụ thể bằng tiếng Việt."},
-            {"role": "user", "content": user_input}
-        ],
-        "temperature": 0.7,  # ✅ Bắt buộc thêm
-        "max_tokens": 512     # ✅ Giới hạn độ dài trả lời
+        "contents": [
+            {
+                "parts": [
+                    {
+                        "text": (
+                            "Bạn là chatbot giúp người dùng phân tích bài văn: "
+                            "nêu rõ ưu điểm và nhược điểm cụ thể bằng tiếng Việt.\n\n"
+                            f"Văn bản người dùng gửi: {user_input}"
+                        )
+                    }
+                ]
+            }
+        ]
     }
 
     try:
-        response = requests.post(GROQ_API_URL, headers=headers, json=data)
-        response.raise_for_status()  # nếu lỗi sẽ nhảy xuống except
+        response = requests.post(GEMINI_API_URL, headers=headers, json=data, timeout=30)
+        response.raise_for_status()
         result = response.json()
 
-        # Lấy nội dung phản hồi
-        reply = result["choices"][0]["message"]["content"]
+        # ✅ Đường dẫn dữ liệu phản hồi của Gemini
+        reply = result["candidates"][0]["content"]["parts"][0]["text"]
         return jsonify({"reply": reply})
 
     except requests.exceptions.RequestException as e:
         print("❌ Lỗi khi gọi API:", e)
-        return jsonify({"reply": "⚠️ Lỗi khi gọi AI: " + str(e)})
+        return jsonify({"reply": f"⚠️ Lỗi khi gọi Gemini API: {str(e)}"}), 500
+    except Exception as e:
+        print("⚠️ Lỗi xử lý phản hồi:", e)
+        return jsonify({"reply": "Không thể xử lý phản hồi từ Gemini."}), 500
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-
-
-
