@@ -7,8 +7,9 @@ app = Flask(__name__)
 CORS(app)
 
 # Dán API key thật của bạn vào đây
-GROQ_API_KEY = "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"
-GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_API_KEY = "AIzaSyA7wDPBfltxUWBO5DLjWPsDWHi37TLzW-U"
+GROQ_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent
+"
 
 @app.route("/")
 def index():
@@ -49,6 +50,7 @@ def chat():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
